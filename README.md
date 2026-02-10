@@ -24,6 +24,8 @@ This app:
 ## Example
 
 Example where the system says “invest in SPY”
+
+Signal: GET /signal
 {
   "symbol": "SPY",
   "lookback_days": 50,
