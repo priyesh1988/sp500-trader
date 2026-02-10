@@ -2,11 +2,11 @@
 
 This app:
 - Computes a simple trend signal on SPY (price vs SMA)
-- Rebalances to 0% or 100% SPY using Alpaca paper trading
+- Rebalances to 0% or 100% SPY using Alpaca trading
 - Adds guardrails: max trades/day + minimum hold window
 
 ## Setup
-1) Create Alpaca paper keys
+1) Create Alpaca keys
 2) Copy env:
    cp .env.example .env
    # fill ALPACA_KEY_ID and ALPACA_SECRET_KEY
