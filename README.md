@@ -41,6 +41,6 @@ So the rule says:
 
 POST /rebalance would try to buy enough SPY to make your portfolio 100% SPY.
 
-## Notes
+## Disclaimer
 - Market data endpoint requires Alpaca data permissions in some accounts.
 - This is a starter. Add risk controls, logging, idempotency, and better execution logic before real money.
