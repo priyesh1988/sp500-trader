@@ -9,7 +9,7 @@ This app:
 1) Create Alpaca keys
 2) Copy env:
    cp .env.example .env
-   fill ALPACA_KEY_ID and ALPACA_SECRET_KEY
+   -- fill ALPACA_KEY_ID and ALPACA_SECRET_KEY
 
 3) Run:
    docker compose up
