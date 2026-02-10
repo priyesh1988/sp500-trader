@@ -23,6 +23,7 @@ This app:
 
 ## Example
 
+Example where the system says “invest in SPY”
 {
   "symbol": "SPY",
   "lookback_days": 50,
@@ -32,14 +33,13 @@ This app:
   "computed_at": "2026-02-10T15:45:12.331980Z"
 }
 
-What this means
-Field	Value	Plain English explanation
-symbol	"SPY"	We are trading the S&P 500 ETF
-lookback_days	50	We averaged the last 50 trading days
-close	680.42	Today’s SPY closing price
-sma	665.10	50-day moving average
-target_weight	1.0	Hold 100% in SPY
-computed_at	timestamp	When the signal was calculated
+Because:
+close (680.42)  >  sma (665.10)
+
+So the rule says:
+👉 Risk-on → fully invested in SPY
+
+POST /rebalance would try to buy enough SPY to make your portfolio 100% SPY.
 
 ## Notes
 - Market data endpoint requires Alpaca data permissions in some accounts.
