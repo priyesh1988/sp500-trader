@@ -1,0 +1,89 @@
+# .github/workflows/cicd.yml
+name: CI-CD (Build, Push to ECR, Deploy to App Runner)
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  id-token: write   # required for OIDC
+  contents: read
+
+env:
+  AWS_REGION: us-west-2
+  ECR_REPOSITORY: sp500-trader
+  APP_RUNNER_SERVICE_ARN: arn:aws:apprunner:us-west-2:123456789012:service/sp500-trader/xxxxxxxxxxxxxxxx
+
+jobs:
+  build-test-push-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python (basic import check)
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies (sanity)
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          python -c "import app.main; print('Import OK')"
+
+      # ---- AWS auth via OIDC (recommended, no long-lived AWS keys) ----
+      # Create an IAM role trusted by GitHub OIDC and set its ARN in secrets:
+      #   AWS_DEPLOY_ROLE_ARN
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Compute image tags
+        id: meta
+        run: |
+          echo "IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}" >> $GITHUB_OUTPUT
+          echo "TAG_SHA=${GITHUB_SHA::12}" >> $GITHUB_OUTPUT
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            -t "${{ steps.meta.outputs.IMAGE_URI }}:${{ steps.meta.outputs.TAG_SHA }}" \
+            -t "${{ steps.meta.outputs.IMAGE_URI }}:latest" \
+            .
+
+      - name: Push Docker image to ECR
+        run: |
+          docker push "${{ steps.meta.outputs.IMAGE_URI }}:${{ steps.meta.outputs.TAG_SHA }}"
+          docker push "${{ steps.meta.outputs.IMAGE_URI }}:latest"
+
+      # ---- Deploy: App Runner (pulls latest image from ECR on new deployment) ----
+      - name: Trigger App Runner deployment
+        run: |
+          aws apprunner start-deployment \
+            --service-arn "${{ env.APP_RUNNER_SERVICE_ARN }}"
+
+      - name: Wait for App Runner to be RUNNING
+        run: |
+          echo "Waiting for App Runner service to be RUNNING..."
+          for i in {1..60}; do
+            STATUS=$(aws apprunner describe-service \
+              --service-arn "${{ env.APP_RUNNER_SERVICE_ARN }}" \
+              --query "Service.Status" --output text)
+            echo "Status: $STATUS"
+            if [ "$STATUS" = "RUNNING" ]; then
+              echo "Deployment complete."
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "Timed out waiting for service to become RUNNING."
+          exit 1
