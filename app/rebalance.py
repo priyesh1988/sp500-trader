@@ -3,6 +3,40 @@ from sqlalchemy.orm import Session
 from .config import settings
 from .models import StrategyState, AuditLog
 from .broker_alpaca import AlpacaBroker
+from .exits import ExitConfig, evaluate_exit
+
+# after:
+# price = await broker.get_last_trade_price(symbol)
+# current_qty = await broker.get_position_qty(symbol)
+
+now = datetime.now(timezone.utc)
+in_position = current_qty > 0
+
+cfg = ExitConfig(
+    enabled=getattr(settings, "EXIT_ENABLED", True),
+    take_profit_pct=getattr(settings, "TAKE_PROFIT_PCT", 0.03),
+    stop_loss_pct=getattr(settings, "STOP_LOSS_PCT", 0.015),
+    trailing_stop_pct=getattr(settings, "TRAILING_STOP_PCT", 0.012),
+    max_hold_days=getattr(settings, "MAX_HOLD_DAYS", 10),
+)
+
+sig, new_peak = evaluate_exit(
+    in_position=in_position,
+    current_price=price,
+    entry_price=getattr(st, "entry_price", None),
+    entry_at=getattr(st, "entry_at", None),
+    peak_price=getattr(st, "peak_price", None),
+    now=now,
+    cfg=cfg,
+)
+
+st.peak_price = new_peak
+db.commit()
+
+# If exit is triggered, override target_weight to 0.0 (force a sell)
+if sig.should_exit:
+    target_weight = 0.0
+    log(db, "exit", f"EXIT triggered: {sig.reason} pnl={sig.pnl_pct:.4f} price={price:.2f}")
 
 def ymd(d: date) -> str:
     return d.isoformat()
