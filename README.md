@@ -22,9 +22,6 @@ This app:
 - State: GET http://localhost:8000/state
 - Disable: POST /state/toggle  {"enabled": false}
 
-## Notes
-- Market data endpoint requires Alpaca data permissions in some accounts.
-- This is a starter. Add risk controls, logging, idempotency, and better execution logic before real money.
 ---
 
 ## Disciplined Exits (Next Layer of Systematic Portfolio Control)
@@ -70,3 +67,10 @@ This gives you:
 - bounded time exposure (reduces “stuck positions”)
 
 It’s about controlling distribution shape — compressing losses and harvesting small wins consistently.
+
+
+## Disclaimer
+- Market data endpoint requires Alpaca data permissions in some accounts.
+- This is a starter. Add risk controls, logging, idempotency, and better execution logic before real money.
+
+
