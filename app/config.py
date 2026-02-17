@@ -13,6 +13,12 @@ class Settings(BaseSettings):
     lookback_days: int = 50
     max_trades_per_day: int = 1
     min_hold_days: int = 2
+    EXIT_ENABLED = True
+    TAKE_PROFIT_PCT = 0.03
+    STOP_LOSS_PCT = 0.015
+    TRAILING_STOP_PCT = 0.012  # set to None / empty to disable
+    MAX_HOLD_DAYS = 10
+
 
     class Config:
         env_file = ".env"
