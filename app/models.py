@@ -1,3 +1,5 @@
+# add imports
+from sqlalchemy import Numeric
 from sqlalchemy import String, Integer, DateTime, Boolean, Float, func
 from sqlalchemy.orm import Mapped, mapped_column
 from .db import Base
@@ -13,6 +15,9 @@ class StrategyState(Base):
     trades_today: Mapped[int] = mapped_column(Integer, default=0)
     hold_until_day: Mapped[str] = mapped_column(String(10), nullable=True)  # YYYY-MM-DD
     enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    entry_price: Mapped[float] = mapped_column(Float, nullable=True)
+    entry_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), nullable=True)
+    peak_price: Mapped[float] = mapped_column(Float, nullable=True)
 
     created_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
